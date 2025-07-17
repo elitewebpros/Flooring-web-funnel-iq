@@ -7,7 +7,7 @@ import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react"
 import WebsiteDemo, { type PageType, type SectionType } from "@/components/website-demo"
 import EducationalContent from "@/components/educational-content"
 
-export default function FlooringConversionTool() {
+export default function BellaHairStudio() {
   const [currentPage, setCurrentPage] = useState<PageType>("home")
   const [selectedSection, setSelectedSection] = useState<SectionType | null>(null)
   const [hoveredSection, setHoveredSection] = useState<SectionType | null>(null)
