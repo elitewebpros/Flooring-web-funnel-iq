@@ -32,28 +32,11 @@ import {
   Zap,
   Heart,
   MessageCircle,
+  Search,
 } from "lucide-react"
+import { conversionContent, type PageType, type SectionType } from "@/lib/conversion-content"
 
-export type PageType = "home" | "about" | "services" | "specials" | "blog" | "contact"
-export type SectionType =
-  | "banner"
-  | "header"
-  | "hero"
-  | "service-buttons"
-  | "body-content"
-  | "testimonials"
-  | "map"
-  | "blog-posts"
-  | "footer"
-  | "about-intro"
-  | "team"
-  | "mission"
-  | "services-list"
-  | "cta"
-  | "specials-grid"
-  | "blog-list"
-  | "contact-form"
-  | "contact-info"
+export type { PageType, SectionType }
 
 const pages = [
   { id: "home" as PageType, label: "Home", icon: HomeIcon },
@@ -68,59 +51,64 @@ interface WebsiteDemoProps {
   currentPage: PageType
   setCurrentPage: (page: PageType) => void
   selectedSection: SectionType | null
-  setSelectedSection: (section: SectionType | null) => void
-  hoveredSection: SectionType | null
-  setHoveredSection: (section: SectionType | null) => void
-  currentTestimonial: number
-  setCurrentTestimonial: (index: number) => void
+  onStudy: (section: SectionType) => void
+  studiedSections: SectionType[]
 }
 
 export default function WebsiteDemo({
   currentPage,
   setCurrentPage,
   selectedSection,
-  setSelectedSection,
-  hoveredSection,
-  setHoveredSection,
-  currentTestimonial,
-  setCurrentTestimonial,
+  onStudy,
+  studiedSections,
 }: WebsiteDemoProps) {
   const InteractiveSection = ({
     id,
     children,
     className = "",
+    compact = false,
   }: {
     id: SectionType
     children: React.ReactNode
     className?: string
+    compact?: boolean
   }) => {
-    const isHovered = hoveredSection === id
     const isSelected = selectedSection === id
+    const isStudied = studiedSections.includes(id)
+    const label = conversionContent[id]?.label ?? id
+    const Icon = isStudied && !isSelected ? CheckCircle : Search
 
     return (
-      <div
+      <section
         className={cn(
-          "cursor-pointer transition-all duration-300 relative",
-          isHovered && "ring-2 ring-amber-400 shadow-xl scale-[1.01]",
-          isSelected && "ring-2 ring-amber-600 bg-gradient-to-r from-amber-50 to-orange-50",
+          "group relative transition-all duration-300",
+          isSelected && "ring-2 ring-blue-500 ring-offset-2",
           className,
         )}
-        onMouseEnter={() => setHoveredSection(id)}
-        onMouseLeave={() => setHoveredSection(null)}
-        onClick={() => setSelectedSection(selectedSection === id ? null : id)}
       >
         {children}
-        {isHovered && !isSelected && (
-          <div className="absolute top-4 right-4 z-10">
-            <Badge className="bg-amber-600 text-white shadow-lg animate-pulse">Click to learn</Badge>
-          </div>
-        )}
-        {isSelected && (
-          <div className="absolute top-4 right-4 z-10">
-            <Badge className="bg-green-600 text-white shadow-lg">Selected</Badge>
-          </div>
-        )}
-      </div>
+        <div className="absolute right-3 top-3 z-20">
+          <button
+            type="button"
+            onClick={() => onStudy(id)}
+            aria-pressed={isSelected}
+            title={`Study the ${label} section`}
+            aria-label={`Study why the ${label} section helps flooring websites convert visitors`}
+            className={cn(
+              "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full text-sm font-semibold shadow-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+              compact ? "w-11 px-0" : "px-4",
+              isSelected
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : isStudied
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "bg-slate-900/85 text-white backdrop-blur-sm hover:bg-slate-900",
+            )}
+          >
+            <Icon className="h-4 w-4" aria-hidden="true" />
+            {!compact && <span>{isSelected ? "Studying" : isStudied ? "Studied" : "Study this section"}</span>}
+          </button>
+        </div>
+      </section>
     )
   }
 
@@ -128,31 +116,25 @@ export default function WebsiteDemo({
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <InteractiveSection id="hero" className="relative min-h-[600px] bg-white overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('/placeholder.svg?height=600&width=1200&text=Beautiful+Hardwood+Living+Room')`,
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent"></div>
+        <img
+          src="/images/hero-hardwood-living-room.png"
+          alt="Bright living room with freshly installed warm oak hardwood flooring"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
 
         <div className="relative container mx-auto px-4 py-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[500px]">
             <div className="text-white space-y-6">
               <div className="space-y-4">
                 <Badge className="bg-amber-600 text-white px-4 py-2 text-sm font-semibold">#1 Rated in Atlanta</Badge>
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                  Premium
-                  <br />
-                  <span className="text-amber-400 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                    Flooring
-                  </span>
-                  <br />
-                  Solutions
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-balance">
+                  Beautiful Floors Installed by{" "}
+                  <span className="text-amber-400">Trusted Local Flooring Experts</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-200 leading-relaxed max-w-lg">
-                  Transform your Atlanta home with expert hardwood, carpet, and tile installation. 20+ years of
-                  craftsmanship you can trust.
+                <p className="text-lg md:text-xl text-gray-200 leading-relaxed max-w-lg text-pretty">
+                  Hardwood, carpet, luxury vinyl, tile, and refinishing services backed by expert installation, clear
+                  communication, and free in-home estimates.
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -175,16 +157,26 @@ export default function WebsiteDemo({
               <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm shadow-2xl border-0">
                 <CardContent className="p-6 md:p-8">
                   <div className="text-center mb-6">
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Get Your Free Estimate</h3>
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Get Your Free In-Home Estimate</h3>
                     <p className="text-gray-600">No obligation • Response in 24 hours</p>
                   </div>
                   <form className="space-y-4">
-                    <Input placeholder="Your Name" className="h-12 border-gray-300" />
-                    <Input placeholder="Phone Number" type="tel" className="h-12 border-gray-300" />
-                    <Input placeholder="Email Address" type="email" className="h-12 border-gray-300" />
+                    <Input placeholder="Your Name" className="h-12 border-gray-300" aria-label="Your name" />
+                    <Input
+                      placeholder="Phone Number"
+                      type="tel"
+                      className="h-12 border-gray-300"
+                      aria-label="Phone number"
+                    />
+                    <Input
+                      placeholder="Email Address"
+                      type="email"
+                      className="h-12 border-gray-300"
+                      aria-label="Email address"
+                    />
                     <Button className="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-lg shadow-lg">
                       <Zap className="w-5 h-5 mr-2" />
-                      Get Free Estimate
+                      Schedule Your Free Flooring Estimate
                     </Button>
                   </form>
                   <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500">
@@ -306,8 +298,8 @@ export default function WebsiteDemo({
             </div>
             <div className="relative">
               <img
-                src="/placeholder.svg?height=500&width=600&text=Beautiful+Flooring+Installation"
-                alt="Flooring Installation"
+                src="/images/flooring-installation.png"
+                alt="Professional installer fitting luxury vinyl plank flooring in a home"
                 className="rounded-2xl shadow-2xl w-full"
               />
               <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 md:p-6 shadow-xl border">
@@ -401,8 +393,8 @@ export default function WebsiteDemo({
             <Card className="overflow-hidden shadow-2xl border-0">
               <div className="relative">
                 <img
-                  src="/placeholder.svg?height=400&width=600&text=Atlanta+Map+with+Showroom+Location"
-                  alt="Atlanta Showroom Location"
+                  src="/images/showroom.png"
+                  alt="Flooring showroom interior displaying hardwood, vinyl, carpet, and tile samples"
                   className="w-full h-60 md:h-80 object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -459,38 +451,41 @@ export default function WebsiteDemo({
       <InteractiveSection id="blog-posts" className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <Badge className="bg-amber-100 text-amber-800 px-4 py-2 mb-4">Latest Insights</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Flooring Tips & Trends</h2>
-            <p className="text-lg md:text-xl text-gray-600">Expert advice from Atlanta's flooring professionals</p>
+            <Badge className="bg-amber-100 text-amber-800 px-4 py-2 mb-4">Our Work</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">See Recent Flooring Projects</h2>
+            <p className="text-lg md:text-xl text-gray-600">Real installations from Atlanta homeowners like you</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "5 Benefits of Hardwood Flooring for Atlanta Homes",
+                title: "Walnut Hardwood Install — Buckhead Dining Room",
                 excerpt:
-                  "Discover why hardwood flooring is perfect for Georgia's climate and adds lasting value to your home...",
+                  "Rich walnut planks refinished and installed for a warm, timeless dining space that adds lasting value...",
                 date: "March 15, 2024",
-                readTime: "5 min read",
+                readTime: "Hardwood project",
                 category: "Hardwood",
-                image: "Hardwood+Benefits+Guide",
+                image: "/images/project-hardwood.png",
+                alt: "Finished walnut hardwood flooring in an elegant dining room",
               },
               {
-                title: "2024 Flooring Trends: What's Hot in Atlanta",
+                title: "Luxury Vinyl Plank — Midtown Kitchen Remodel",
                 excerpt:
-                  "From luxury vinyl to exotic hardwoods, explore the flooring trends taking Atlanta by storm this year...",
+                  "Light gray luxury vinyl plank installed for a durable, water-resistant kitchen floor that looks high-end...",
                 date: "March 10, 2024",
-                readTime: "7 min read",
-                category: "Trends",
-                image: "2024+Flooring+Trends",
+                readTime: "Vinyl project",
+                category: "Luxury Vinyl",
+                image: "/images/project-vinyl.png",
+                alt: "Light gray luxury vinyl plank flooring in a modern kitchen",
               },
               {
-                title: "Tile vs. Hardwood: Making the Right Choice",
+                title: "Porcelain Tile Bathroom — Decatur Home",
                 excerpt:
-                  "Compare durability, maintenance, and style to choose the perfect flooring for your Atlanta home...",
+                  "Large-format porcelain tile installed with clean grout lines for a sleek, low-maintenance bathroom floor...",
                 date: "March 5, 2024",
-                readTime: "6 min read",
-                category: "Comparison",
-                image: "Tile+vs+Hardwood",
+                readTime: "Tile project",
+                category: "Tile & Stone",
+                image: "/images/project-tile.png",
+                alt: "Large format porcelain tile flooring in a modern bathroom",
               },
             ].map((post, index) => (
               <Card
@@ -499,8 +494,8 @@ export default function WebsiteDemo({
               >
                 <div className="relative overflow-hidden">
                   <img
-                    src={`/placeholder.svg?height=250&width=400&text=${post.image}`}
-                    alt={post.title}
+                    src={post.image || "/placeholder.svg"}
+                    alt={post.alt}
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 left-4">
@@ -526,7 +521,7 @@ export default function WebsiteDemo({
                     variant="outline"
                     className="w-full group-hover:bg-amber-600 group-hover:text-white group-hover:border-amber-600 transition-all bg-transparent"
                   >
-                    Read Article
+                    View Project
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -749,12 +744,22 @@ export default function WebsiteDemo({
             </p>
             <form className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
-                <Input placeholder="First Name" className="h-12 border-gray-300" />
-                <Input placeholder="Last Name" className="h-12 border-gray-300" />
+                <Input placeholder="First Name" className="h-12 border-gray-300" aria-label="First name" />
+                <Input placeholder="Last Name" className="h-12 border-gray-300" aria-label="Last name" />
               </div>
-              <Input placeholder="Phone Number" type="tel" className="h-12 border-gray-300" />
-              <Input placeholder="Email Address" type="email" className="h-12 border-gray-300" />
-              <Textarea placeholder="Project Details & Questions" rows={4} className="border-gray-300" />
+              <Input placeholder="Phone Number" type="tel" className="h-12 border-gray-300" aria-label="Phone number" />
+              <Input
+                placeholder="Email Address"
+                type="email"
+                className="h-12 border-gray-300"
+                aria-label="Email address"
+              />
+              <Textarea
+                placeholder="Project Details & Questions"
+                rows={4}
+                className="border-gray-300"
+                aria-label="Project details and questions"
+              />
               <Button className="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-lg shadow-lg">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Send My Request
@@ -829,7 +834,7 @@ export default function WebsiteDemo({
   return (
     <div className="flex flex-col">
       {/* Top Banner */}
-      <InteractiveSection id="banner" className="bg-gradient-to-r from-black to-gray-900 py-4 relative">
+      <InteractiveSection id="banner" compact className="bg-gradient-to-r from-black to-gray-900 py-4 relative">
         <div className="text-white font-bold text-center text-lg flex items-center justify-center gap-2">
           <Zap className="w-5 h-5 text-amber-400" />
           Financing Available - 0% APR for Qualified Customers
@@ -838,8 +843,8 @@ export default function WebsiteDemo({
       </InteractiveSection>
 
       {/* Header */}
-      <InteractiveSection id="header" className="bg-white shadow-lg border-b relative">
-        <div className="px-6 py-4">
+      <InteractiveSection id="header" compact className="bg-white shadow-lg border-b relative">
+        <div className="px-6 py-4 pr-16">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
@@ -873,10 +878,8 @@ export default function WebsiteDemo({
                   key={page.id}
                   variant={currentPage === page.id ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => {
-                    setCurrentPage(page.id)
-                    setSelectedSection(null)
-                  }}
+                  onClick={() => setCurrentPage(page.id)}
+                  aria-current={currentPage === page.id ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-2 transition-all duration-300",
                     currentPage === page.id

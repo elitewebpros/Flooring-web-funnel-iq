@@ -1,96 +1,124 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { TrendingUp, ClipboardList } from "lucide-react"
 
-import WebsiteDemo, { type PageType, type SectionType } from "@/components/website-demo"
-import EducationalContent from "@/components/educational-content"
+import WebsiteDemo from "@/components/website-demo"
+import CoachPanel from "@/components/coach-panel"
+import { pageSections, type PageType, type SectionType } from "@/lib/conversion-content"
 
 export default function FlooringConversionTool() {
   const [currentPage, setCurrentPage] = useState<PageType>("home")
   const [selectedSection, setSelectedSection] = useState<SectionType | null>(null)
-  const [hoveredSection, setHoveredSection] = useState<SectionType | null>(null)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isEducationalPanelOpen, setIsEducationalPanelOpen] = useState(false)
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [studiedSections, setStudiedSections] = useState<SectionType[]>([])
+  const [isCoachOpen, setIsCoachOpen] = useState(false)
+
+  const handleSetPage = useCallback((page: PageType) => {
+    setCurrentPage(page)
+    setSelectedSection(null)
+  }, [])
+
+  const handleStudy = useCallback((section: SectionType) => {
+    setSelectedSection(section)
+    setStudiedSections((prev) => (prev.includes(section) ? prev : [...prev, section]))
+    // Only auto-open the drawer on mobile; the desktop coach panel is always visible.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      setIsCoachOpen(true)
+    }
+  }, [])
+
+  // Progress is scoped to the sections available on the current page.
+  const { studiedCount, totalSections } = useMemo(() => {
+    const sections = pageSections[currentPage] ?? []
+    return {
+      studiedCount: sections.filter((s) => studiedSections.includes(s)).length,
+      totalSections: sections.length,
+    }
+  }, [currentPage, studiedSections])
+
+  const demo = (
+    <WebsiteDemo
+      currentPage={currentPage}
+      setCurrentPage={handleSetPage}
+      selectedSection={selectedSection}
+      onStudy={handleStudy}
+      studiedSections={studiedSections}
+    />
+  )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
-        {/* Mobile Content */}
-        <div className="flex-1">
-          <WebsiteDemo
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      {/* Tool header (tool chrome — separate from the example website) */}
+      <header className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
+              <TrendingUp className="h-5 w-5 text-white" aria-hidden="true" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold leading-tight text-slate-900 sm:text-base">
+                Flooring Website Conversion Tool
+              </h1>
+              <p className="text-xs leading-tight text-slate-500 sm:text-sm">
+                Study a high-converting flooring website and click each section to learn why it converts.
+              </p>
+            </div>
+          </div>
+          <Badge variant="outline" className="hidden border-slate-300 text-slate-600 sm:inline-flex">
+            Interactive Demo
+          </Badge>
+        </div>
+      </header>
+
+      {/* Body */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Example website (rendered once, shared across breakpoints) */}
+        <main className="flex-1 overflow-y-auto lg:border-r lg:border-slate-200" aria-label="Example flooring website">
+          <div className="bg-white">{demo}</div>
+        </main>
+
+        {/* Desktop coach panel */}
+        <aside className="hidden w-[380px] flex-shrink-0 overflow-hidden bg-white lg:flex xl:w-[420px]">
+          <CoachPanel
             selectedSection={selectedSection}
-            setSelectedSection={setSelectedSection}
-            hoveredSection={hoveredSection}
-            setHoveredSection={setHoveredSection}
-            currentTestimonial={currentTestimonial}
-            setCurrentTestimonial={setCurrentTestimonial}
+            studiedCount={studiedCount}
+            totalSections={totalSections}
           />
-        </div>
-
-        {/* Mobile Educational Panel Toggle */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <Button
-            onClick={() => setIsEducationalPanelOpen(!isEducationalPanelOpen)}
-            className="bg-[#2596ff] hover:bg-[#1479e5] text-white rounded-full w-14 h-14 shadow-2xl"
-          >
-            {isEducationalPanelOpen ? <ChevronDown className="w-6 h-6" /> : <ChevronUp className="w-6 h-6" />}
-          </Button>
-        </div>
-
-        {/* Mobile Educational Panel */}
-        {isEducationalPanelOpen && (
-          <div className="fixed inset-x-0 bottom-0 z-40 bg-white border-t-4 border-[#2596ff] shadow-2xl max-h-[70vh] overflow-hidden">
-            <div className="bg-black p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#2596ff] to-[#1479e5] rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Conversion Insights</h2>
-                  <p className="text-[#2596ff] text-sm">Educational Content</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 overflow-y-auto max-h-[50vh]">
-              <EducationalContent currentPage={currentPage} selectedSection={selectedSection} />
-            </div>
-          </div>
-        )}
+        </aside>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:flex min-h-screen gap-6 p-6">
-        {/* Left Panel - Website Demo (65%) */}
-        <div className="w-[65%] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-screen">
-          <div className="flex-1 overflow-y-auto">
-            <WebsiteDemo
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              selectedSection={selectedSection}
-              setSelectedSection={setSelectedSection}
-              hoveredSection={hoveredSection}
-              setHoveredSection={setHoveredSection}
-              currentTestimonial={currentTestimonial}
-              setCurrentTestimonial={setCurrentTestimonial}
-            />
-          </div>
-        </div>
-
-        {/* Vertical Divider */}
-        <div className="w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 shadow-sm"></div>
-
-        {/* Right Panel - Educational Content (35%) */}
-        <div className="w-[35%] flex flex-col max-h-screen">
-          <EducationalContent currentPage={currentPage} selectedSection={selectedSection} />
-        </div>
+      {/* Mobile coach trigger */}
+      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
+        <Button
+          onClick={() => setIsCoachOpen(true)}
+          aria-expanded={isCoachOpen}
+          aria-haspopup="dialog"
+          className="h-12 rounded-full bg-blue-600 px-5 text-white shadow-2xl hover:bg-blue-700"
+        >
+          <ClipboardList className="mr-2 h-5 w-5" aria-hidden="true" />
+          View Coach Notes
+          {studiedCount > 0 && (
+            <span className="ml-2 rounded-full bg-white/25 px-2 py-0.5 text-xs font-semibold">{studiedCount}</span>
+          )}
+        </Button>
       </div>
+
+      {/* Mobile coach drawer */}
+      <Sheet open={isCoachOpen} onOpenChange={setIsCoachOpen}>
+        <SheetContent side="bottom" className="h-[85vh] p-0 lg:hidden">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Conversion Coach</SheetTitle>
+          </SheetHeader>
+          <CoachPanel
+            selectedSection={selectedSection}
+            studiedCount={studiedCount}
+            totalSections={totalSections}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
